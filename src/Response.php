@@ -2,19 +2,10 @@
 
 namespace Irekk\Controller;
 
-use Irekk\Events\Promise;
+use Irekk\Promises\Promise;
 
-class Response
+class Response extends Promise
 {
-    /**
-     * @var integer $state 
-     */
-    protected $state = Promise::STATE_PENDING;
-    
-    /**
-     * @var array $promises
-     */
-    protected $promises = [];
     
     /**
      * @var array $promises
@@ -64,7 +55,7 @@ class Response
      */
     public function header($header, $value = null, $code = null)
     {
-        $this->promises[] = $this->getPromise(function() use ($header, $value, $code) {
+        $this->then(function() use ($header, $value, $code) {
             header("$header: $value", true, $code);
         });
     }
@@ -76,72 +67,8 @@ class Response
      */
     public function send($contents)
     {
-        $this->promises[] = $this->getPromise(function() use ($contents) {
+        $this->then(function() use ($contents) {
             print $contents;
         });
-    }
-    
-    /**
-     *
-     * @author ikubicki
-     */
-    public function resolve()
-    {
-        if ($this->isPending()) {
-            foreach ($this->promises as $promise) {
-                $promise->resolve(func_get_args());
-            }
-            $this->state = Promise::STATE_RESOLVED;
-        }
-    }
-    
-    /**
-     *
-     * @author ikubicki
-     */
-    public function reject()
-    {
-        $this->promises = [];
-        $this->state = Promise::STATE_REJECTED;
-    }
-    
-    /**
-     *
-     * @author ikubicki
-     * @return boolean
-     */
-    public function isPending()
-    {
-        return $this->state == Promise::STATE_PENDING;
-    }
-    
-    /**
-     *
-     * @author ikubicki
-     * @return boolean
-     */
-    public function isResolved()
-    {
-        return $this->state == Promise::STATE_RESOLVED;
-    }
-    
-    /**
-     *
-     * @author ikubicki
-     * @return boolean
-     */
-    public function isRejected()
-    {
-        return $this->state == Promise::STATE_REJECTED;
-    }
-    
-    /**
-     *
-     * @author ikubicki
-     * @return Promise
-     */
-    public function getPromise($callback)
-    {
-        return new Promise($callback);
     }
 }
